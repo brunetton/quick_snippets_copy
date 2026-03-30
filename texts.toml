@@ -1,0 +1,10 @@
+clips = [
+  "# NL2\n- ",
+  "# Escape\n- ",
+  "# Escape .5€\n- ",
+  "# KO 1€\n- ",
+  "# KO .5€\n- ",
+  "# KO 25c\n- ",
+  "# Short\n- ",
+  "# Freeroll\n- ",
+]
