@@ -75,11 +75,20 @@ class AppWindow(Gtk.ApplicationWindow):
         self.set_default_size(156, 175)
 
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        # Allow the box to expand with the window when resized
+        box.set_hexpand(True)
+        box.set_vexpand(True)
+        # Make children share space equally so buttons stretch
+        box.set_homogeneous(True)
         self.set_child(box)
 
         for text in texts:
             display_label = text.splitlines()[0] if text else ""
             button = Gtk.Button(label=display_label)
+            # Let each button expand to fill available vertical space
+            button.set_vexpand(True)
+            button.set_hexpand(True)
+            button.set_valign(Gtk.Align.FILL)
             button.connect("clicked", self.on_button_clicked, text)
             box.append(button)
 
@@ -87,7 +96,10 @@ class AppWindow(Gtk.ApplicationWindow):
         css_provider = Gtk.CssProvider()
         css_provider.load_from_data("""
         button {
-            font-size: 15px;
+            font-size: 12px;
+            padding: 2px 6px;
+            min-height: 0;
+            height: 1.0em;
         }
         """)
         Gtk.StyleContext.add_provider_for_display(
