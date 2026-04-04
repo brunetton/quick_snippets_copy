@@ -8,6 +8,6 @@ Little Gtk app to quickly copy defined texts when clicked
 
 ## Usage
 
-- `mv texts.toml.tpl texts.toml`
-- edit `texts.toml` file
+- `mv snippets.toml.tpl snippets.toml`
+- edit `snippets.toml` file
 - python main.py

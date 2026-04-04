@@ -57,20 +57,20 @@ def show_error_dialog(parent, title, message, app=None):
     return None
 
 
-def load_texts_from_toml():
-    # Always look for texts.toml in the same directory as this script
-    p = Path(__file__).parent / 'texts.toml'
+def load_snippets_from_toml():
+    # Always look for snippets.toml in the same directory as this script
+    p = Path(__file__).parent / 'snippets.toml'
     if not p.exists():
         raise FileNotFoundError(f"Fichier {p} introuvable")
     data = toml.loads(p.read_text(encoding='utf-8'))
     clips = data.get('clips')
     if not isinstance(clips, list) or not clips:
-        raise ValueError("'clips' doit être une liste non-vide dans texts.toml")
+        raise ValueError("'clips' doit être une liste non-vide dans snippets.toml")
     return clips
 
 
 class AppWindow(Gtk.ApplicationWindow):
-    def __init__(self, app, texts):
+    def __init__(self, app, snippets):
         super().__init__(application=app, title="Quick Snippets")
         self.set_default_size(156, 175)
 
@@ -82,7 +82,7 @@ class AppWindow(Gtk.ApplicationWindow):
         box.set_homogeneous(True)
         self.set_child(box)
 
-        for text in texts:
+        for text in snippets:
             display_label = text.splitlines()[0] if text else ""
             button = Gtk.Button(label=display_label)
             # Let each button expand to fill available vertical space
@@ -111,24 +111,24 @@ class AppWindow(Gtk.ApplicationWindow):
     def on_button_clicked(self, widget, text):
         pyperclip.copy(text)
 
-class PokerApp(Gtk.Application):
+class MainWindow(Gtk.Application):
     def __init__(self):
         super().__init__()
         self.connect('activate', self.on_activate)
 
     def on_activate(self, app):
         try:
-            texts = load_texts_from_toml()
+            snippets = load_snippets_from_toml()
         except Exception as exc:
             # no main window if loading fails
-            show_error_dialog(None, "Erreur de chargement", f"Impossible de charger texts.toml: {exc}", app=app)
+            show_error_dialog(None, f"Can't read snippets.toml: {exc}", app=app)
             return
 
-        win = AppWindow(app, texts)
+        win = AppWindow(app, snippets)
         self.window = win
         win.present()
 
 
 if __name__ == "__main__":
-    app = PokerApp()
+    app = MainWindow()
     app.run()
