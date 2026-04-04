@@ -71,7 +71,7 @@ def load_texts_from_toml():
 
 class AppWindow(Gtk.ApplicationWindow):
     def __init__(self, app, texts):
-        super().__init__(application=app, title="Poker Clipboard Shortcuts")
+        super().__init__(application=app, title="Quick Snippets")
         self.set_default_size(156, 175)
 
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
