@@ -37,7 +37,8 @@ def show_error_dialog(parent, title, message, app=None):
     if parent is not None:
         try:
             win.set_transient_for(parent)
-        except Exception:
+        except (TypeError, AttributeError):
+            # parent may not be a suitable Gdk window or method may be absent
             pass
 
     box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=12, margin_bottom=12, margin_start=12, margin_end=12)
@@ -105,11 +106,21 @@ class AppWindow(Gtk.ApplicationWindow):
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(),
             css_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            Gtk.STYLE_PROVIDER_PRIORITY_USER
         )
 
     def on_button_clicked(self, widget, text):
         pyperclip.copy(text)
+        # Add a style class so the global CSS applies and the background stays colored
+        try:
+            widget.get_style_context().add_class('copied')
+            # try to reinforce styling by adding a small inline provider too
+            css = Gtk.CssProvider()
+            css.load_from_data(f"button.copied {{ background-color: #dddef6; background-image: none; color: #000000 }}")
+            widget.get_style_context().add_provider(css, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+        except AttributeError:
+            pass
+
 
 class MainWindow(Gtk.Application):
     def __init__(self):
