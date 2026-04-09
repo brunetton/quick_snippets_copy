@@ -91,6 +91,16 @@ class AppWindow(Gtk.ApplicationWindow):
             button.set_hexpand(True)
             button.set_valign(Gtk.Align.FILL)
             button.connect("clicked", self.on_button_clicked, text)
+            # Right-click gesture: reset background without copying
+            try:
+                rc = Gtk.GestureClick()
+                rc.set_button(3)
+                rc.connect("pressed", self.on_button_right_clicked)
+                # attach gesture/controller to the button
+                button.add_controller(rc)
+            except (AttributeError, TypeError):
+                # If gestures/controllers aren't available, ignore gracefully
+                pass
             box.append(button)
 
         # Set large font
@@ -112,14 +122,27 @@ class AppWindow(Gtk.ApplicationWindow):
     def on_button_clicked(self, widget, text):
         pyperclip.copy(text)
         # Add a style class so the global CSS applies and the background stays colored
-        try:
-            widget.get_style_context().add_class('copied')
-            # try to reinforce styling by adding a small inline provider too
-            css = Gtk.CssProvider()
-            css.load_from_data(f"button.copied {{ background-color: #dddef6; background-image: none; color: #000000 }}")
-            widget.get_style_context().add_provider(css, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-        except AttributeError:
-            pass
+        widget.get_style_context().add_class('copied')
+        # try to reinforce styling by adding a small inline provider too
+        css = Gtk.CssProvider()
+        css.load_from_data(f"button.copied {{ background-color: #dddef6; background-image: none; color: #000000 }}")
+        widget.get_style_context().add_provider(css, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+        # keep provider reference so we can remove it on right-click
+        widget.set_data('copied_css', css)
+
+    def on_button_right_clicked(self, gesture, n_press, x, y):
+        # This handler will be attached to the button via a Gtk.GestureClick.
+        # It should reset the button's style without copying its text.
+        widget = gesture.get_widget()
+        ctx = widget.get_style_context()
+        ctx.remove_class('copied')
+        provider = widget.get_data('copied_css') if hasattr(widget, 'get_data') else None
+        if provider:
+            try:
+                ctx.remove_provider(provider)
+            except (AttributeError, TypeError):
+                pass
+            widget.set_data('copied_css', None)
 
 
 class MainWindow(Gtk.Application):
@@ -128,10 +151,13 @@ class MainWindow(Gtk.Application):
         self.connect('activate', self.on_activate)
 
     def on_activate(self, app):
+        # Build a tuple of decode exceptions provided by the toml backend
+        _toml_decode_exc = getattr(toml, 'TOMLDecodeError', None) or getattr(toml, 'TomlDecodeError', None)
+        _expected_errors = (FileNotFoundError, ValueError) + ((_toml_decode_exc,) if _toml_decode_exc is not None else ())
         try:
             snippets = load_snippets_from_toml()
-        except Exception as exc:
-            # no main window if loading fails
+        except _expected_errors as exc:
+            # no main window if loading fails; report known errors
             show_error_dialog(None, f"Can't read snippets.toml: {exc}", app=app)
             return
 
