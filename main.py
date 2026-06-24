@@ -107,10 +107,11 @@ class AppWindow(Gtk.ApplicationWindow):
         css_provider = Gtk.CssProvider()
         css_provider.load_from_data("""
         button {
-            font-size: 12px;
-            padding: 2px 6px;
+            font-size: 10px;
+            padding: 0px 0px;
             min-height: 0;
             height: 1.0em;
+            margin: 0;
         }
         """)
         Gtk.StyleContext.add_provider_for_display(
